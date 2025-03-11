@@ -13,5 +13,7 @@ struct edges_t
     size_t len;
 };
 
+int edges_alloc(edges_t &edges);
+void edges_free(edges_t &edges);
 
 #endif // EDGE_H

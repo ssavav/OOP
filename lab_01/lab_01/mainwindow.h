@@ -7,6 +7,7 @@
 #include <QPen>
 #include <QBrush>
 #include "figure.h"
+#include "request_manager.h"
 #include "draw.h"
 
 QT_BEGIN_NAMESPACE
@@ -33,6 +34,7 @@ private:
     void scaleModel();
     void rotateModel();
     void export_gui();
+    void show_error(int error);
 
 };
 #endif // MAINWINDOW_H

@@ -12,8 +12,10 @@ struct figure_t
     edges_t edges;
 };
 
-int read_figure(const char *filename, figure_t &figure);
-int check_figure(figure_t &figure);
-int export_figure(const char *filename, figure_t &figure);
+int read_figure(figure_t &figure, const char *filename);
+int check_figure(const figure_t &figure);
+int export_figure(figure_t &figure, const char *filename);
+figure_t &figure_alloc();
+void figure_free(figure_t &figure);
 
 #endif // FIGURE_H

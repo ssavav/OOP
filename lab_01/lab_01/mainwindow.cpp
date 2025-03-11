@@ -9,14 +9,14 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    figure.points.data = (point_t*)malloc(sizeof(point_t) * MAX_VERTICES);
-    figure.edges.data  = (edge_t*)malloc(sizeof(edge_t) * MAX_EDGES);
+    // figure.points.data = (point_t*)malloc(sizeof(point_t) * MAX_VERTICES);
+    // figure.edges.data  = (edge_t*)malloc(sizeof(edge_t) * MAX_EDGES);
 
-    if (!figure.points.data || !figure.edges.data) {
-        free(figure.points.data);
-        free(figure.edges.data);
-        throw std::runtime_error("Ошибка выделения памяти!");
-    }
+    // if (!figure.points.data || !figure.edges.data) {
+    //     free(figure.points.data);
+    //     free(figure.edges.data);
+    //     throw std::runtime_error("Ошибка выделения памяти!");
+    // }
 
     QGraphicsScene *scene = new QGraphicsScene(this);
 
@@ -39,23 +39,52 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    free(figure.points.data);
-    free(figure.edges.data);
+    // free(figure.points.data);
+    // free(figure.edges.data);
     delete ui;
 }
 
-void MainWindow::draw()
+void MainWindow::show_error(int error)
 {
-    if (check_figure(figure))
+    char *str = "Ошибка!";
+    switch (error)
     {
-        QMessageBox::warning(this, "Ошибка", "Фигура не задана!");
+    case DATA_ERROR:
+        str = "Фигура не задана!";
+        break;
+    case FILE_ERROR:
+        str = "Ошибка при работе с файлом!";
+        break;
+    
+    default:
+        break;
+    }
+    QMessageBox::warning(this, "Ошибка", str);
+}
+
+void MainWindow::draw()
+{   
+    request_t request;
+    request.action = CHECK;
+    
+    int error = manager(request);
+    if (error) 
+    {
+        show_error(error);
         return;
     }
-    
     QRect rcontent = ui->graph->contentsRect();
     ui->graph->scene()->setSceneRect(0, 0, rcontent.width(), rcontent.height());
+
+    request.action = DRAW;
+    request.draw.scene = ui->graph->scene();
+    request.draw.width = rcontent.width();
+    request.draw.height = rcontent.height();
+
+
+    error = manager(request);
+    if (error) show_error(error);
     
-    draw_figure(ui->graph->scene(), figure);
 }
 
 void MainWindow::import()
@@ -63,12 +92,14 @@ void MainWindow::import()
     QString filename = ui->file_inpt->text();
     std::string std_filename = filename.toStdString();
     const char *c_filename = std_filename.c_str();
-    if (read_figure(c_filename, figure))
-    {
-        QMessageBox::warning(this, "Ошибка", "Ошибка в чтении файла!");
-        return;
-    }
-    printf("v:%d e:%d\n", figure.edges.len, figure.points.len);
+    
+    request_t request;
+    request.action = IMPORT;
+    request.filename = c_filename;
+    std::cout << request.filename <<std::endl;
+
+    int error = manager(request);
+    if (error) show_error(error);
 }
 
 void MainWindow::export_gui()
@@ -76,12 +107,22 @@ void MainWindow::export_gui()
     QString filename = ui->file_inpt->text();
     std::string std_filename = filename.toStdString();
     const char *c_filename = std_filename.c_str();
-    if (export_figure(c_filename, figure))
+
+    request_t request;
+    request.action = CHECK;
+    
+    int error = manager(request);
+    if (error) 
     {
-        QMessageBox::warning(this, "Ошибка", "Ошибка в записи файла!");
+        show_error(error);
         return;
     }
-    printf("v:%d e:%d\n", figure.edges.len, figure.points.len);
+
+    request.action = EXPORT;
+    request.filename = c_filename;
+
+    error = manager(request);
+    if (error) show_error(error);
 }
 
 void MainWindow::openFileDialog()
@@ -94,64 +135,78 @@ void MainWindow::openFileDialog()
 }
 
 void MainWindow::translateModel()
-{
-    if (check_figure(figure))
+{   
+    request_t request;
+    request.action = CHECK;
+    
+    int error = manager(request);
+    if (error) 
     {
-        QMessageBox::warning(this, "Ошибка", "Фигура не задана!");
+        show_error(error);
         return;
     }
     bool ok1, ok2, ok3;
-    double dx = ui->dx_inpt->text().toDouble(&ok1);
-    double dy = ui->dy_inpt->text().toDouble(&ok2);
-    double dz = ui->dz_inpt->text().toDouble(&ok3);
+    request.move.dx = ui->dx_inpt->text().toDouble(&ok1);
+    request.move.dy = ui->dy_inpt->text().toDouble(&ok2);
+    request.move.dz = ui->dz_inpt->text().toDouble(&ok3);
     
     if (!ok1 || !ok2 || !ok3) {
         QMessageBox::warning(this, "Ошибка", "Введите корректные числа для переноса");
         return;
     }
-    
-    translate_points(dx, dy, dz, figure.points);
+    request.action = MOVE;
+    manager(request);
     draw();
 }
 
 void MainWindow::scaleModel()
 {
-    if (check_figure(figure))
+    request_t request;
+    request.action = CHECK;
+    
+    int error = manager(request);
+    if (error) 
     {
-        QMessageBox::warning(this, "Ошибка", "Фигура не задана!");
+        show_error(error);
         return;
     }
     bool ok1, ok2, ok3;
-    double sx = ui->x_scale->text().toDouble(&ok1);
-    double sy = ui->y_scale->text().toDouble(&ok2);
-    double sz = ui->z_scale->text().toDouble(&ok3);
+    request.scale.sx = ui->x_scale->text().toDouble(&ok1);
+    request.scale.sy = ui->y_scale->text().toDouble(&ok2);
+    request.scale.sz = ui->z_scale->text().toDouble(&ok3);
     
     if (!ok1 || !ok2 || !ok3) {
         QMessageBox::warning(this, "Ошибка", "Введите корректные числа для масштабирования");
         return;
     }
     
-    scale_points(sx, sy, sz, figure.points);
+    request.action = SCALE;
+    manager(request);
     draw();
 }
 
 void MainWindow::rotateModel()
 {
-    if (check_figure(figure))
+    request_t request;
+    request.action = CHECK;
+    
+    int error = manager(request);
+    if (error) 
     {
-        QMessageBox::warning(this, "Ошибка", "Фигура не задана!");
+        show_error(error);
         return;
     }
     bool ok1, ok2, ok3;
-    double ax = ui->x_angle->text().toDouble(&ok1);
-    double ay = ui->y_angle->text().toDouble(&ok2);
-    double az = ui->z_angle->text().toDouble(&ok3);
+    request.rotate.ax = ui->x_angle->text().toDouble(&ok1);
+    request.rotate.ay = ui->y_angle->text().toDouble(&ok2);
+    request.rotate.az = ui->z_angle->text().toDouble(&ok3);
     
     if (!ok1 || !ok2 || !ok3) {
         QMessageBox::warning(this, "Ошибка", "Введите корректные числовые значения для поворота");
         return;
     }
     
-    rotate_points(ax, ay, az, figure.points);
+    request.action = ROTATE;
+    manager(request);
     draw();
 }

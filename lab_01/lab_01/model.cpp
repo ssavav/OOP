@@ -85,7 +85,6 @@ void rotate_model_x(double angle) {
     }
 }
 
-// Функция поворота вокруг оси Y
 void rotate_model_y(double angle) {
     double radians = to_rad(angle);
     double cos_a = cos(radians);
@@ -100,7 +99,6 @@ void rotate_model_y(double angle) {
     }
 }
 
-// Функция поворота вокруг оси Z
 void rotate_model_z(double angle) {
     double radians = to_rad(angle);
     double cos_a = cos(radians);

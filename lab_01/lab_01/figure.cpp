@@ -1,39 +1,38 @@
 #include "figure.h"
+#include "helpful.h"
 
-void set_points_count(points_t &points, size_t count) {
-    points.len = count;
+figure_t &figure_alloc()
+{
+
+    static figure_t figure;
+
+    points_alloc(figure.points);
+
+    edges_alloc(figure.edges);
+
+    return figure;
 }
 
-// Функция для установки количества рёбер
-void set_edges_count(edges_t &edges, size_t count) {
-    edges.len = count;
+void figure_free(figure_t &figure)
+{
+    points_free(figure.points);
+    edges_free(figure.edges);
 }
 
-// Функция для получения массива точек
-point_t *get_points_array(points_t &points) {
-    return points.data;
-}
-
-// Функция для получения массива рёбер
-edge_t *get_edges_array(edges_t &edges) {
-    return edges.data;
-}
-
-// Функция для установки координат точки
-void set_point(point_t &point, double x, double y, double z) {
+void set_point(point_t &point, const double x, const double y, const double z)
+{
     point.x = x;
     point.y = y;
     point.z = z;
 }
 
-// Функция для установки рёбер
-void set_edge(edge_t &edge, size_t start, size_t end) {
+void set_edge(edge_t &edge, const size_t start, const size_t end)
+{
     edge.start = start;
     edge.end = end;
 }
 
-
-int read_figure(const char *filename, figure_t &figure)
+int read_figure(figure_t &figure, const char *filename)
 {
     int error_flag = EXIT_SUCCESS;
 
@@ -41,16 +40,19 @@ int read_figure(const char *filename, figure_t &figure)
     if (!file)
     {
         printf("Error, while opening the file %s\n", filename);
-        error_flag = FILE_ERROR;
+        return FILE_ERROR;
     }
 
+    point_t *points_arr = get_points_array(figure.points);
+    edge_t  *edges_arr  = get_edges_array(figure.edges);
+
     size_t point_count = 0;
-    size_t edge_count = 0;
-    int reading_points = 0;
-    int reading_edges = 0;
+    size_t edge_count  = 0;
+    bool reading_points = false;
+    bool reading_edges  = false;
 
     char line[256];
-    while (file && !error_flag && fgets(line, sizeof(line), file))
+    while (!error_flag && fgets(line, sizeof(line), file))
     {
         char *p = strchr(line, '\n');
         if (p)
@@ -58,14 +60,14 @@ int read_figure(const char *filename, figure_t &figure)
 
         if (strcmp(line, "v") == 0)
         {
-            reading_points = 1;
-            reading_edges = 0;
+            reading_points = true;
+            reading_edges  = false;
             continue;
         }
         else if (strcmp(line, "e") == 0)
         {
-            reading_points = 0;
-            reading_edges = 1;
+            reading_points = false;
+            reading_edges  = true;
             continue;
         }
 
@@ -74,9 +76,7 @@ int read_figure(const char *filename, figure_t &figure)
             double x, y, z;
             if (sscanf(line, "%lf %lf %lf", &x, &y, &z) == 3)
             {
-                figure.points.data[point_count].x = x;
-                figure.points.data[point_count].y = y;
-                figure.points.data[point_count].z = z;
+                set_point(points_arr[point_count], x, y, z);
                 point_count++;
             }
         }
@@ -85,59 +85,59 @@ int read_figure(const char *filename, figure_t &figure)
             size_t start, end;
             if (sscanf(line, "%zu %zu", &start, &end) == 2)
             {
-                figure.edges.data[edge_count].start = start;
-                figure.edges.data[edge_count].end = end;
+                set_edge(edges_arr[edge_count], start, end);
                 edge_count++;
             }
         }
     }
 
-    figure.points.len = point_count;
-    figure.edges.len = edge_count;
-    if (error_flag != FILE_ERROR)
-        fclose(file);
+    fclose(file);
 
+    set_points_count(figure.points, point_count);
+    set_edges_count(figure.edges, edge_count);
+
+    printf("v:%zu e:%zu\n", get_points_size(figure.points), get_edges_size(figure.edges));
     return error_flag;
 }
 
-int check_figure(figure_t &figure)
+int check_figure(const figure_t &figure)
 {
     int error_flag = EXIT_SUCCESS;
-    if (figure.edges.len <= 0 || figure.points.len <= 0)
+    if (get_points_size(figure.points) == 0 || get_edges_size(figure.edges) == 0)
         error_flag = DATA_ERROR;
-    
     return error_flag;
 }
 
-int export_figure(const char *filename, figure_t &figure)
+int export_figure(figure_t &figure, const char *filename)
 {
     int error_flag = EXIT_SUCCESS;
     FILE *file = fopen(filename, "w");
     if (!file)
     {
         printf("Error, while opening the file %s for writing\n", filename);
-        error_flag = FILE_ERROR;
+        return FILE_ERROR;
     }
 
-    if (error_flag != FILE_ERROR)
+    point_t *points_arr = get_points_array(figure.points);
+    edge_t *edges_arr = get_edges_array(figure.edges);
+    size_t p_count = get_points_size(figure.points);
+    size_t e_count = get_edges_size(figure.edges);
+
+    fprintf(file, "v\n");
+    for (size_t i = 0; i < p_count; i++)
     {
-        fprintf(file, "v\n");
-        for (size_t i = 0; i < figure.points.len; i++)
-        {
-            fprintf(file, "%.6f %.6f %.6f\n",
-                    figure.points.data[i].x,
-                    figure.points.data[i].y,
-                    figure.points.data[i].z);
-        }
-
-        fprintf(file, "e\n");
-        for (size_t i = 0; i < figure.edges.len; i++)
-        {
-            fprintf(file, "%zu %zu\n", figure.edges.data[i].start, figure.edges.data[i].end);
-        }
-
-        fclose(file);
+        fprintf(file, "%.6f %.6f %.6f\n",
+                points_arr[i].x,
+                points_arr[i].y,
+                points_arr[i].z);
     }
 
+    fprintf(file, "e\n");
+    for (size_t i = 0; i < e_count; i++)
+    {
+        fprintf(file, "%zu %zu\n", edges_arr[i].start, edges_arr[i].end);
+    }
+
+    fclose(file);
     return error_flag;
 }
