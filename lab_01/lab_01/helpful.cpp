@@ -29,3 +29,13 @@ edge_t *get_edges_array(edges_t &edges)
 {
     return edges.data;
 }
+
+int get_edge_start(edge_t edge)
+{
+    return edge.start;
+}
+
+int get_edge_end(edge_t edge)
+{
+    return edge.end;
+}

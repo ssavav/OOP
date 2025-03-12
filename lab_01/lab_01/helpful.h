@@ -11,4 +11,7 @@ void set_edges_count(edges_t &edges, const size_t count);
 point_t* get_points_array(points_t &points);
 edge_t*  get_edges_array(edges_t &edges);
 
+int get_edge_start(edge_t edge);
+int get_edge_end(edge_t edge);
+
 #endif // HELPFUL_H

@@ -39,6 +39,9 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
+    request_t request;
+    request.action = QUIT;
+    manager(request);
     // free(figure.points.data);
     // free(figure.edges.data);
     delete ui;
@@ -127,7 +130,7 @@ void MainWindow::export_gui()
 
 void MainWindow::openFileDialog()
 {
-    QString fileName = QFileDialog::getOpenFileName(this, "Выберите файл");
+    QString fileName = QFileDialog::getOpenFileName(this, "Выберите файл", "../../../../OOP/lab_01/lab_01/data");
     if (!fileName.isEmpty())
     {
         ui->file_inpt->setText(fileName);

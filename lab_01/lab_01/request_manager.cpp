@@ -16,13 +16,13 @@ int manager(request_t request)
         error = export_figure(figure, request.filename);
         break;
     case MOVE:
-        translate_points(figure.points, request.move);
+        translate_figure(figure.points, request.move);
         break;
     case SCALE:
-        error = scale_points(figure.points, request.scale);
+        error = scale_figure(figure.points, request.scale);
         break;
     case ROTATE:
-        rotate_points(figure.points, request.rotate);
+        rotate_figure(figure.points, request.rotate);
         break;
     case DRAW:
         draw_figure(request.draw, figure);

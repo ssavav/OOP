@@ -7,13 +7,8 @@ struct edge_t
 {
     int start, end;
 };
-struct edges_t
-{
-    edge_t *data;
-    size_t len;
-};
 
-int edges_alloc(edges_t &edges);
-void edges_free(edges_t &edges);
+
+void set_edge(edge_t &edge, const size_t start, const size_t end);
 
 #endif // EDGE_H
