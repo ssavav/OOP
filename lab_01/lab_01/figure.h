@@ -20,7 +20,8 @@ int export_figure(figure_t &figure, const char *filename);
 figure_t &figure_alloc();
 void figure_free(figure_t &figure);
 
-void translate_figure(points_t &points, const move_data_t data);
-int scale_figure(points_t &points, const scale_data_t data);
+void translate_figure(figure_t &figure, const move_data_t data);
+int scale_figure(figure_t &figure, const scale_data_t data);
+void rotate_figure(figure_t &figure, const rotate_data_t data);
 
 #endif // FIGURE_H

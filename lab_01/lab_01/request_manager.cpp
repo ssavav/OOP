@@ -16,19 +16,19 @@ int manager(request_t request)
         error = export_figure(figure, request.filename);
         break;
     case MOVE:
-        translate_figure(figure.points, request.move);
+        translate_figure(figure, request.move);
         break;
     case SCALE:
-        error = scale_figure(figure.points, request.scale);
+        error = scale_figure(figure, request.scale);
         break;
     case ROTATE:
-        rotate_figure(figure.points, request.rotate);
+        rotate_figure(figure, request.rotate);
         break;
     case DRAW:
         draw_figure(request.draw, figure);
         break;
     case CHECK:
-        error = check_figure(figure);
+        // error = check_figure(figure);
         break;
     case QUIT:
         figure_free(figure);

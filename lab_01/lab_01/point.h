@@ -25,4 +25,8 @@ int check_scale_data(const scale_data_t data);
 void scale_point(point_t &point, const double sx, const double sy, const double sz);
 
 void translate_point(point_t &point, const double dx, const double dy, const double dz);
+
+int read_point(FILE *file, point_t &point, int &error_flag);
+void export_point(FILE *file, const point_t &point);
+void deepcopy_point(point_t &dst, const point_t &src);
 #endif // POINT_H

@@ -37,8 +37,8 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
         request_manager.cpp
         request_manager.h
         edge.cpp
-        helpful.cpp
-        helpful.h
+
+
         points.cpp
         edges.h
         edges.cpp
