@@ -1,0 +1,15 @@
+# ninja log v6
+279	4060	7625364614432911	CMakeFiles/lab_01.dir/draw.cpp.obj	469b038dbdf9447b
+69	293	7625397442680143	lab_01_autogen/timestamp	f1347134aed34613
+69	293	7625397442680143	lab_01_autogen/mocs_compilation.cpp	f1347134aed34613
+69	293	7625397442680143	D:/C coding bmstu/sem_04/OOP/lab_01/lab_01/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/lab_01_autogen/timestamp	f1347134aed34613
+69	293	7625397442680143	D:/C coding bmstu/sem_04/OOP/lab_01/lab_01/build/Desktop_Qt_6_8_2_MinGW_64_bit-Debug/lab_01_autogen/mocs_compilation.cpp	f1347134aed34613
+294	5869	7625397444932890	CMakeFiles/lab_01.dir/mainwindow.cpp.obj	930a55362f849332
+5869	6221	7625397500682297	lab_01.exe	577efe7c3007eba1
+2143	6889	7624877404092651	CMakeFiles/lab_01.dir/lab_01_autogen/mocs_compilation.cpp.obj	8af921b87079df7e
+2149	6996	7624877404153831	CMakeFiles/lab_01.dir/main.cpp.obj	3f8bebecde2eb413
+416	1693	7610472613702158	CMakeFiles/lab_01.dir/vector.cpp.obj	e1aa8f9faa0ca726
+476	1869	7618585315864749	CMakeFiles/lab_01.dir/model.cpp.obj	a426b3621e15d28b
+2222	4044	7624875386571273	CMakeFiles/lab_01.dir/edge.cpp.obj	5ec72a5724df92f3
+241	1091	7625347728161816	CMakeFiles/lab_01.dir/point.cpp.obj	e5f6c49a1cc95b36
+299	3960	7625397444985405	CMakeFiles/lab_01.dir/figure.cpp.obj	64b1dcd5c326ae8
