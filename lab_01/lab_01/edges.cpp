@@ -1,39 +1,22 @@
 #include "edges.h"
 
-edge_t get_edge(const edges_t &edges, const size_t i)
+
+
+void edges_free(edge_t *data)
 {
-    return edges.data[i];
+    free(data);
+}
+void edges_free_wrapper(edges_t &edges)
+{
+    edges_free(edges.data);
 }
 
-size_t get_edges_size(const edges_t &edges)
-{
-    return edges.len;
-}
-
-void set_edges_count(edges_t &edges, const size_t count)
-{
-    edges.len = count;
-}
-
-edge_t *get_edges_array(const edges_t &edges)
-{
-    return edges.data;
-}
-
-void edges_free(edges_t &edges)
-{
-    free(edges.data);
-    edges.len = 0;
-}
-
-int edges_alloc_count(edges_t &edges, const size_t count)
+int edges_alloc_count(edge_t *&edges, const size_t count)
 {
     int error_flag = EXIT_SUCCESS;
-    edges.data = (edge_t*)malloc(sizeof(edge_t) * count);
-    if (!edges.data)
+    edges = (edge_t*)malloc(sizeof(edge_t) * count);
+    if (!edges)
         error_flag = MEMORY_ERROR;
-    else
-        edges.len = count;
 
     return error_flag;
 }
@@ -44,55 +27,90 @@ void edges_init(edges_t &edges)
     edges.len = 0;
 }
 
-int read_edges(edges_t &edges, FILE *file, int &error_flag)
+int read_edges_count(size_t &edge_count, FILE *file)
 {
-    char line[256];
-    size_t edge_count = 0;
-
-    if (!fgets(line, sizeof(line), file) || sscanf(line, "e %zu", &edge_count) != 1)
+    // char line[BUFSIZ];
+    int error_flag = EXIT_SUCCESS;
+    error_flag = check_file_opened(file);
+    if (!error_flag)
     {
-        printf("Error: invalid edge count format\n");
-        error_flag = FILE_ERROR;
-    }
-
-    if (!error_flag && edges_alloc_count(edges, edge_count) != EXIT_SUCCESS)
-    {
-        error_flag = MEMORY_ERROR;
-    }
-
-    for (size_t i = 0; !error_flag && i < edge_count; i++)
-    {
-        error_flag = read_edge(file, edges.data[i], error_flag);
-        if (error_flag != EXIT_SUCCESS)
+        if (fscanf(file, "%zu", &edge_count) != 1)
         {
-            edges_free(edges);
+            printf("Error: invalid edge count format\n");
+            error_flag = DATA_ERROR;
         }
     }
-
     return error_flag;
 }
 
-void export_edges(FILE *file, edges_t &edges)
-{
-    size_t e_count = get_edges_size(edges);
-    edge_t *edges_arr = get_edges_array(edges);
+// int read(edges_t &edges, FILE *file)
+// {
+//     int error_flag = EXIT_SUCCESS;
+//     error_flag = check_file_opened(file);
+//     if (!error_flag)
+//     {
+//         error_flag = read_edge_wrapper(edges.data, edges.len, file);
+        
+//         if (error_flag)
+//         {
+//             edges_clear(edges);
+//         }
+//     }
+//     return error_flag;
+// }
 
-    fprintf(file, "e %zu\n", e_count);
-    for (size_t i = 0; i < e_count; i++)
+int read_edges(edges_t &edges, FILE *file)
+{
+    int error_flag = EXIT_SUCCESS;
+    // char line[BUFSIZ];
+    size_t edge_count = 0;
+
+    if (check_file_opened(file))
     {
-        export_edge(file, edges_arr[i]);
+        return FILE_ERROR;
     }
+    
+    
+    error_flag = read_edges_count(edges.len, file);
+        if (!error_flag)
+        {
+            error_flag = edges_alloc_count(edges.data, edges.len);
+            if (!error_flag)
+            {
+                error_flag = read_edge_wrapper(edges.data, edges.len, file);
+        
+                if (error_flag)
+                {
+                    edges_free(edges.data);
+                }
+            }
+        }
+    
+    return error_flag;
+}
+
+int export_edges(FILE *file, edges_t &edges)
+{
+    int error_flag = EXIT_SUCCESS;
+    error_flag = check_file_opened(file);
+    if (!error_flag)
+    {
+        fprintf(file, "%zu\n", edges.len);
+        error_flag = export_edge_wrapper(file, edges.data, edges.len);
+    }
+    
+    return error_flag;
 }
 
 int deepcopy_edges(edges_t &dst, const edges_t &src)
 {
     int error_flag = EXIT_SUCCESS;
     
-    error_flag = edges_alloc_count(dst, src.len);
-    
-    for (size_t i = 0; !error_flag && i < src.len; i++)
+    error_flag = edges_alloc_count(dst.data, src.len);
+    if (!error_flag)
     {
-        deepcopy_edge(dst.data[i], src.data[i]);
+        dst.len = src.len; 
+        deep_copy_edge_wrapper(dst.data, src.data, src.len);
     }
     
     return error_flag;
@@ -101,15 +119,11 @@ int deepcopy_edges(edges_t &dst, const edges_t &src)
 int check_edges(const edges_t &edges, const size_t point_count)
 {
     int error_flag = EXIT_SUCCESS;
-    size_t edge_count = get_edges_size(edges);
-    
-    if (edge_count == 0)
+    if (edges.len == 0 || point_count == 0)
         error_flag = DATA_ERROR;
-        
-    edge_t *edges_array = get_edges_array(edges);
-    for (size_t i = 0; !error_flag && i < edge_count; i++)
-    {
-        error_flag = check_edge(edges_array[i], point_count);
-    }
+    else
+        error_flag = check_edge_wrapper(edges.data, edges.len, point_count);
+    
+
     return error_flag;
 }

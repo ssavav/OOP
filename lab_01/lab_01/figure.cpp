@@ -1,19 +1,32 @@
 #include "figure.h"
 
-figure_t &figure_alloc()
+figure_t &figure_init()
 {
     static figure_t figure;
-
+    
     points_init(figure.points);
     edges_init(figure.edges);
-
+    center_init(figure.center);
+    
     return figure;
 }
 
-void figure_free(figure_t &figure)
+int figure_free(figure_t &figure)
 {
-    points_free(figure.points);
-    edges_free(figure.edges);
+    points_free_wrapper(figure.points);
+    edges_free_wrapper(figure.edges);
+
+    return EXIT_SUCCESS;
+}
+
+void calc_figure_center(figure_t &figure)
+{
+    calc_points_center(figure.center, figure.points, figure.points.len);
+}
+
+void update_figure_center(figure_t &figure)
+{
+    calc_figure_center(figure);
 }
 
 int deepcopy_figure(figure_t &dst, const figure_t &src)
@@ -27,7 +40,38 @@ int deepcopy_figure(figure_t &dst, const figure_t &src)
     {
         error_flag = deepcopy_edges(dst.edges, src.edges);
         if (error_flag)
-            points_free(dst.points);
+            points_free_wrapper(dst.points);
+    }
+    
+    return error_flag;
+}
+
+int open_file(FILE *&file, const char *filename, const char *mode)
+{
+    int error_flag = EXIT_SUCCESS;
+    
+    file = fopen(filename, mode);
+    if (!file)
+    {
+        printf("Error while opening the file: %s\n", filename);
+        error_flag = FILE_ERROR;
+    }
+    return error_flag;
+}
+
+int read_fields(figure_t &temp_figure, FILE *file)
+{
+    int error_flag = EXIT_SUCCESS;
+    error_flag = check_file_opened(file);
+    if (!error_flag)
+    {
+        error_flag = read_points(temp_figure.points, file);
+        if (!error_flag)
+        {
+            error_flag = read_edges(temp_figure.edges, file);
+            if (error_flag) 
+                points_free_wrapper(temp_figure.points);
+        }
     }
     
     return error_flag;
@@ -36,96 +80,114 @@ int deepcopy_figure(figure_t &dst, const figure_t &src)
 int read_figure(figure_t &figure, const char *filename)
 {
     int error_flag = EXIT_SUCCESS;
-    figure_t temp_figure = figure_alloc();
-
-    FILE *file = fopen(filename, "r");
-    if (!file)
-    {
-        printf("Error while opening the file: %s\n", filename);
-        error_flag = FILE_ERROR;
-    }
-
+    
+    FILE *file = NULL;
+    error_flag = open_file(file, filename, READ);
+    
+    // вынесено
     if (!error_flag)
     {
-        read_points(temp_figure.points, file, error_flag);
+        figure_t temp_figure;// = figure_init();
+        error_flag = read_fields(temp_figure, file); // поменял местами
+        fclose(file);
         if (!error_flag)
         {
-            read_edges(temp_figure.edges, file, error_flag);
-            // if (error_flag) points_free(temp_figure.points);
+            error_flag = check_figure(temp_figure);
+
+            if (!error_flag)
+                error_flag = deepcopy_figure(figure, temp_figure);
+            else
+                figure_free(temp_figure);
         }
     }
 
-    error_flag = check_figure(temp_figure);
-    printf("%d\n", error_flag);
+    return error_flag;
+}
+int load_figure(figure_t &figure, const char *filename)
+{
+    int error_flag = EXIT_SUCCESS;
+    error_flag = read_figure(figure, filename);
     if (!error_flag)
     {
-        deepcopy_figure(figure, temp_figure);
+        calc_figure_center(figure);
     }
-    else
-        figure_free(temp_figure);
-
-    fclose(file);
     return error_flag;
 }
 
-int check_figure(figure_t &figure)
+int check_figure_wrapper(const points_t &points, const edges_t &edges)
+{
+    int error_flag = check_edges(edges, points.len);
+    return error_flag;
+}
+
+int check_figure(const figure_t &figure)
 {
     int error_flag = EXIT_SUCCESS;
 
-    size_t point_count = get_points_size(figure.points);
+    error_flag = check_figure_wrapper(figure.points, figure.edges);
+
     
-    if (point_count == 0)
-        error_flag = DATA_ERROR;
-
-    if (!error_flag)
-        error_flag = check_edges(figure.edges, point_count);
-
     return error_flag;
 }
 
 int export_figure(figure_t &figure, const char *filename)
 {
     int error_flag = EXIT_SUCCESS;
-    FILE *file = fopen(filename, "w");
-    if (!file)
-    {
-        printf("Error, while opening the file %s for writing\n", filename);
-        error_flag = FILE_ERROR;
-    }
-
+    FILE *file = NULL;
+    error_flag = check_figure(figure);
+    
     if (!error_flag)
     {
-        export_points(file, figure.points);
-        export_edges(file, figure.edges);
-        fclose(file);
+        error_flag = open_file(file, filename, WRITE);
+        if (!error_flag)
+        {
+            export_points(file, figure.points);
+            export_edges(file, figure.edges);
+            fclose(file);
+        }
     }
     
     return error_flag;
 }
 
-void translate_figure(figure_t &figure, const move_data_t data)
+int translate_figure(figure_t &figure, const move_data_t data)
 {
-    point_t *arr = get_points_array(figure.points);
-    size_t len = get_points_size(figure.points);
-    
-    translate_points(arr, len, data);
+    int error_flag = EXIT_SUCCESS;
+    error_flag = check_figure(figure);
+    if (!error_flag)
+    {
+        translate_points_all(figure.points, figure.center, data);
+    }
+
+    return error_flag;
 }
 
 int scale_figure(figure_t &figure, const scale_data_t data)
 {
-    point_t *arr = get_points_array(figure.points);
-    size_t len = get_points_size(figure.points);
+    int error_flag = EXIT_SUCCESS;
+    error_flag = check_figure(figure);
+    if (!error_flag)
+    {
+        error_flag = scale_points_all(figure.points, figure.center, data);
+    }
 
-    int error = scale_points(arr, len, data);
-    return error;
+    return error_flag;
 }
 
-void rotate_figure(figure_t &figure, const rotate_data_t data)
-{
-    point_t *arr = get_points_array(figure.points);
-    size_t len = get_points_size(figure.points);
 
-    rotate_points_x(arr, len, data.ax);
-    rotate_points_y(arr, len, data.ay);
-    rotate_points_z(arr, len, data.az);
+// добавить поворот аокруг центра а не вокруг оси
+int rotate_figure(figure_t &figure, const rotate_data_t data)
+{
+    int error_flag = EXIT_SUCCESS;
+    error_flag = check_figure(figure);
+    if (!error_flag)
+    {
+        // translate_figure_to_origin(figure.points, figure.center);
+    
+        rotate_points_all(figure.points, figure.center, data);
+        
+        // translate_figure_from_origin(figure.points, figure.center);
+    }
+    
+    return error_flag;
 }

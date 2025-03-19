@@ -2,36 +2,36 @@
 #include "figure.h"
 #include "draw.h"
 
+// добавить поворот вокруг центра а не вокруг оси какой то
+// дальше в рид и дроу
 int manager(request_t request)
 {
-    static figure_t figure = figure_alloc();
+    static figure_t figure = figure_init();
     int error = EXIT_SUCCESS;
 
+    // везде добавить ерроры
     switch (request.action)
     {
     case IMPORT:
-        error = read_figure(figure, request.filename);
+        error = load_figure(figure, request.filename);
         break;
     case EXPORT:
         error = export_figure(figure, request.filename);
         break;
     case MOVE:
-        translate_figure(figure, request.move);
+        error = translate_figure(figure, request.move);
         break;
     case SCALE:
         error = scale_figure(figure, request.scale);
         break;
     case ROTATE:
-        rotate_figure(figure, request.rotate);
+        error = rotate_figure(figure, request.rotate);
         break;
     case DRAW:
-        draw_figure(request.draw, figure);
-        break;
-    case CHECK:
-        // error = check_figure(figure);
+        error = draw_figure(figure, request.draw);
         break;
     case QUIT:
-        figure_free(figure);
+        error = figure_free(figure);
         break;
     }
     

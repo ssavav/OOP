@@ -2,6 +2,12 @@
 #define DRAW_H
 #include "figure.h"
 
-void draw_figure(draw_data_t draw, const figure_t &figure);
+typedef struct line_t
+{
+    point_t start;
+    point_t end;
+} line_t;
+
+int draw_figure(const figure_t &figure, draw_data_t draw);
 
 #endif // DRAW_H

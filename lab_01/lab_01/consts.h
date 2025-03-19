@@ -15,5 +15,11 @@
 #define TOO_MANY_EDGES 3
 #define MEMORY_ERROR 4
 #define DATA_ERROR 5
+#define SCENE_ERROR 6
+
+#define READ "r"
+#define WRITE "w"
+
+int check_file_opened(FILE *file);
 
 #endif // CONSTS_H

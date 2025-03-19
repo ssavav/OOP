@@ -58,7 +58,6 @@ void MainWindow::show_error(int error)
     case FILE_ERROR:
         str = "Ошибка при работе с файлом!";
         break;
-    
     default:
         break;
     }
@@ -68,14 +67,7 @@ void MainWindow::show_error(int error)
 void MainWindow::draw()
 {   
     request_t request;
-    request.action = CHECK;
-    
-    int error = manager(request);
-    if (error) 
-    {
-        show_error(error);
-        return;
-    }
+
     QRect rcontent = ui->graph->contentsRect();
     ui->graph->scene()->setSceneRect(0, 0, rcontent.width(), rcontent.height());
 
@@ -84,9 +76,12 @@ void MainWindow::draw()
     request.draw.width = rcontent.width();
     request.draw.height = rcontent.height();
 
-
-    error = manager(request);
-    if (error) show_error(error);
+    int error = manager(request);
+    if (error) 
+    {
+        show_error(error);
+        return;
+    }
     
 }
 
@@ -100,9 +95,12 @@ void MainWindow::import()
     request.action = IMPORT;
     request.filename = c_filename;
     std::cout << request.filename <<std::endl;
-
     int error = manager(request);
-    if (error) show_error(error);
+    if (error) 
+    {
+        show_error(error);
+        return;
+    }
 }
 
 void MainWindow::export_gui()
@@ -112,20 +110,15 @@ void MainWindow::export_gui()
     const char *c_filename = std_filename.c_str();
 
     request_t request;
-    request.action = CHECK;
-    
+
+    request.action = EXPORT;
+    request.filename = c_filename;
     int error = manager(request);
     if (error) 
     {
         show_error(error);
         return;
     }
-
-    request.action = EXPORT;
-    request.filename = c_filename;
-
-    error = manager(request);
-    if (error) show_error(error);
 }
 
 void MainWindow::openFileDialog()
@@ -140,14 +133,7 @@ void MainWindow::openFileDialog()
 void MainWindow::translateModel()
 {   
     request_t request;
-    request.action = CHECK;
-    
-    int error = manager(request);
-    if (error) 
-    {
-        show_error(error);
-        return;
-    }
+
     bool ok1, ok2, ok3;
     request.move.dx = ui->dx_inpt->text().toDouble(&ok1);
     request.move.dy = ui->dy_inpt->text().toDouble(&ok2);
@@ -158,21 +144,19 @@ void MainWindow::translateModel()
         return;
     }
     request.action = MOVE;
-    manager(request);
-    draw();
-}
-
-void MainWindow::scaleModel()
-{
-    request_t request;
-    request.action = CHECK;
-    
     int error = manager(request);
     if (error) 
     {
         show_error(error);
         return;
     }
+    draw();
+}
+
+void MainWindow::scaleModel()
+{
+    request_t request;
+
     bool ok1, ok2, ok3;
     request.scale.sx = ui->x_scale->text().toDouble(&ok1);
     request.scale.sy = ui->y_scale->text().toDouble(&ok2);
@@ -185,20 +169,19 @@ void MainWindow::scaleModel()
     
     request.action = SCALE;
     manager(request);
-    draw();
-}
-
-void MainWindow::rotateModel()
-{
-    request_t request;
-    request.action = CHECK;
-    
     int error = manager(request);
     if (error) 
     {
         show_error(error);
         return;
     }
+    draw();
+}
+
+void MainWindow::rotateModel()
+{
+    request_t request;
+
     bool ok1, ok2, ok3;
     request.rotate.ax = ui->x_angle->text().toDouble(&ok1);
     request.rotate.ay = ui->y_angle->text().toDouble(&ok2);
@@ -210,6 +193,12 @@ void MainWindow::rotateModel()
     }
     
     request.action = ROTATE;
-    manager(request);
+    int error = manager(request);
+    // std::cout << error << std::endl;
+    if (error) 
+    {
+        show_error(error);
+        return;
+    }
     draw();
 }
