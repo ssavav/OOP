@@ -1,0 +1,5 @@
+if(EXISTS "D:/bmstu_coding/sem_04/beb/oop_labs/lab_02/build/lab_02[1]_tests.cmake")
+  include("D:/bmstu_coding/sem_04/beb/oop_labs/lab_02/build/lab_02[1]_tests.cmake")
+else()
+  add_test(lab_02_NOT_BUILT lab_02_NOT_BUILT)
+endif()
